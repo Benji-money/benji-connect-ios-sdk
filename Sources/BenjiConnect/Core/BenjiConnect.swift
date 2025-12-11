@@ -30,3 +30,14 @@ public final class BenjiConnect {
         presentingViewController.present(vc, animated: true, completion: nil)
     }
 }
+
+public extension BenjiConnect {
+    static var sdkVersion: String {
+        BenjiConnectConstants.version
+    }
+
+    static var sdkNamespace: String {
+        BenjiConnectConstants.namespace
+    }
+}
+

@@ -1,6 +1,6 @@
 //
 //  BenjiConnectViewController.swift
-//  
+//
 //
 //  Created by Marta Wilgan on 12/11/25.
 //
@@ -48,7 +48,10 @@ final class BenjiConnectViewController: UIViewController {
         ])
 
         let userContentController = WKUserContentController()
-        userContentController.add(self, name: "benjiConnectCallback")
+        userContentController.add(self, name: NativeCallbackType.success.rawValue)
+        userContentController.add(self, name: NativeCallbackType.exit.rawValue)
+        userContentController.add(self, name: NativeCallbackType.error.rawValue)
+        userContentController.add(self, name: NativeCallbackType.event.rawValue)
 
         let configuration = WKWebViewConfiguration()
         configuration.userContentController = userContentController
@@ -65,6 +68,7 @@ final class BenjiConnectViewController: UIViewController {
             webView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor)
         ])
 
+        // Tap outside to exit
         let tap = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped(_:)))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
@@ -78,8 +82,8 @@ final class BenjiConnectViewController: UIViewController {
             dismiss(animated: true) {
                 let metadata = BenjiConnectOnExitMetadata(
                     context: BenjiConnectMetadataContext(
-                        namespace: "benji-connect-ios",
-                        version: "0.1.0"
+                        namespace: BenjiConnectConstants.namespace,
+                        version: BenjiConnectConstants.version
                     ),
                     step: nil,
                     trigger: BenjiConnectExitTrigger.tappedOutOfBounds.rawValue
@@ -124,8 +128,6 @@ extension BenjiConnectViewController: WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController,
                                didReceive message: WKScriptMessage) {
 
-        guard message.name == "benjiConnectCallback" else { return }
-
         guard let dict = message.body as? [String: Any] else {
             log("[BenjiConnect] Unexpected message body: \(message.body)")
             return
@@ -134,56 +136,42 @@ extension BenjiConnectViewController: WKScriptMessageHandler {
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: dict, options: [])
             let decoder = JSONDecoder()
-            // This lets snake_case keys from JS map to camelCase Swift props
             decoder.keyDecodingStrategy = .convertFromSnakeCase
 
-            // First, decode just the `type` for routing
-            let basic = try decoder.decode(BasicCallbackEnvelope.self, from: jsonData)
+            switch message.name {
+            case NativeCallbackType.success.rawValue:
+                let payload = try decoder.decode(OnSuccessPayload.self, from: jsonData)
+                handleSuccess(payload)
 
-            switch basic.type {
-            case .flowSuccess:
-                let envelope = try decoder.decode(
-                    NativeCallbackEnvelope<OnSuccessPayload>.self,
-                    from: jsonData
-                )
-                handleFlowSuccess(envelope.data)
+            case NativeCallbackType.exit.rawValue:
+                let payload = try decoder.decode(OnExitPayload.self, from: jsonData)
+                handleExit(payload)
 
-            case .flowExit:
-                let envelope = try decoder.decode(
-                    NativeCallbackEnvelope<OnExitPayload>.self,
-                    from: jsonData
-                )
-                handleFlowExit(envelope.data)
+            case NativeCallbackType.error.rawValue:
+                let payload = try decoder.decode(OnErrorPayload.self, from: jsonData)
+                handleError(payload)
 
-            case .error:
-                let envelope = try decoder.decode(
-                    NativeCallbackEnvelope<OnErrorPayload>.self,
-                    from: jsonData
-                )
-                handleError(envelope.data)
+            case NativeCallbackType.event.rawValue
+                let payload = try decoder.decode(OnEventPayload.self, from: jsonData)
+                handleEvent(payload)
 
-            case .authSuccess, .event:
-                let envelope = try decoder.decode(
-                    NativeCallbackEnvelope<OnEventPayload>.self,
-                    from: jsonData
-                )
-                handleGenericEvent(type: basic.type, payload: envelope.data)
+            default:
+                log("[BenjiConnect] Unknown handler: \(message.name)")
             }
-
         } catch {
-            log("[BenjiConnect] Failed to decode callback envelope: \(error)")
+            log("[BenjiConnect] Failed to decode payload for handler \(message.name): \(error)")
         }
     }
 
     // MARK: - Typed handlers
 
-    private func handleFlowSuccess(_ payload: OnSuccessPayload) {
+    private func handleSuccess(_ payload: OnSuccessPayload) {
         dismiss(animated: true) {
             self.config.onSuccess?(payload.token, payload.metadata)
         }
     }
 
-    private func handleFlowExit(_ payload: OnExitPayload) {
+    private func handleExit(_ payload: OnExitPayload) {
         dismiss(animated: true) {
             self.config.onExit?(payload.metadata)
         }
@@ -201,7 +189,8 @@ extension BenjiConnectViewController: WKScriptMessageHandler {
         }
     }
 
-    private func handleGenericEvent(type: BenjiConnectEventType, payload: OnEventPayload) {
-        config.onEvent?(type, payload.metadata)
+    private func handleEvent(_ payload: OnEventPayload) {
+        config.onEvent?(payload.type, payload.metadata)
     }
 }
+

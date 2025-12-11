@@ -162,6 +162,9 @@ extension BenjiConnectWebView: WKScriptMessageHandler {
         // Parse the message body
         guard let messageDict = message.body as? [String: Any],
               let eventTypeString = messageDict["type"] as? String else {
+            if config.debugMode {
+                print("[BenjiConnect] Warning: Failed to parse message from web. Expected dictionary with 'type' field. Received: \(message.body)")
+            }
             return
         }
         

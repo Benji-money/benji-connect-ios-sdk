@@ -71,6 +71,8 @@ import Foundation
             if let jsonData = try? JSONSerialization.data(withJSONObject: metadata, options: []),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 queryItems.append(URLQueryItem(name: "metadata", value: jsonString))
+            } else if debugMode {
+                print("[BenjiConnect] Warning: Failed to serialize metadata to JSON. Metadata will not be included in the URL.")
             }
         }
         

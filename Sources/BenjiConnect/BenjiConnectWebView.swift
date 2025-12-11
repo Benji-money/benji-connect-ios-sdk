@@ -31,7 +31,7 @@ internal class BenjiConnectWebView: UIView {
         if #available(iOS 13.0, *) {
             self.activityIndicator = UIActivityIndicatorView(style: .large)
         } else {
-            self.activityIndicator = UIActivityIndicatorView(style: .whiteLarge)
+            self.activityIndicator = UIActivityIndicatorView(style: .gray)
         }
         self.activityIndicator.hidesWhenStopped = true
         

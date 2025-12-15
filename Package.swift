@@ -2,9 +2,9 @@
 import PackageDescription
 
 let package = Package(
-    name: "benji-connect-ios-sdk",
+    name: "BenjiConnect",
     platforms: [
-        .iOS(.v14)
+        .iOS(.v15)
     ],
     products: [
         .library(
@@ -14,10 +14,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "BenjiConnect",
-            resources: [
-                .process("Resources")
-            ]
+            name: "BenjiConnect"
         )
     ]
 )

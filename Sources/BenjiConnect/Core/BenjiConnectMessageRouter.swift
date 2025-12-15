@@ -73,7 +73,6 @@ extension BenjiConnectMessageRouter: WKScriptMessageHandler {
     private func route(_ message: BenjiConnectEventMessage) {
         switch message {
         case .authSuccess(let data):
-            // JS forwards AUTH_SUCCESS as an "event" callback
             let event = Mapper.mapToAuthSuccessEventData(data: data)
             config.onEvent?(event.type, event.metadata)
 
@@ -94,18 +93,6 @@ extension BenjiConnectMessageRouter: WKScriptMessageHandler {
             let errorData = Mapper.mapToOnErrorData(data: data)
             config.onError?(errorData.error, errorData.errorID, errorData.metadata)
         }
-    }
-}
-
-// MARK: - Helpers
-
-private extension URL {
-    var originString: String? {
-        guard let scheme = self.scheme, let host = self.host else { return nil }
-        if let port = self.port {
-            return "\(scheme)://\(host):\(port)"
-        }
-        return "\(scheme)://\(host)"
     }
 }
 

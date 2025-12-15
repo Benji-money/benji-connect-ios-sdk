@@ -11,7 +11,7 @@ public enum Mapper {
 
     public static func mapToOnSuccessData(data: BenjiConnectAuthSuccessEventData) -> BenjiConnectOnSuccessData {
         let token = extractAccessToken(from: data.token)
-        let base = BenjiConnectMetadata(context: buildContext(), extras: [:])
+        let base = BenjiConnectMetadata(context: Builder.buildContext(), extras: [:])
 
         let metadata = BenjiConnectOnSuccessMetadata(
             base: base,
@@ -23,13 +23,13 @@ public enum Mapper {
     }
 
     public static func mapToOnExitData(data: BenjiConnectFlowExitEventData) -> BenjiConnectOnExitData {
-        let base = BenjiConnectMetadata(context: buildContext(), extras: [:])
+        let base = BenjiConnectMetadata(context: Builder.buildContext(), extras: [:])
         let md = BenjiConnectOnExitMetadata(base: base, trigger: data.trigger.rawValue, step: data.step)
         return .init(metadata: md)
     }
 
     public static func mapToOnErrorData(data: BenjiConnectErrorEventData) -> BenjiConnectOnErrorData {
-        let base = BenjiConnectMetadata(context: buildContext(), extras: [:])
+        let base = BenjiConnectMetadata(context: Builder.buildContext(), extras: [:])
 
         let nsError = NSError(
             domain: "BenjiConnect",
@@ -45,12 +45,12 @@ public enum Mapper {
     }
 
     public static func mapToAuthSuccessEventData(data: BenjiConnectAuthSuccessEventData) -> BenjiConnectOnEventData {
-        let base = BenjiConnectMetadata(context: buildContext(), extras: [:])
+        let base = BenjiConnectMetadata(context: Builder.buildContext(), extras: [:])
         return .init(type: .authSuccess, metadata: base)
     }
 
     public static func mapToOnEventData(type: BenjiConnectEventType, rawData: BenjiConnectEventData) -> BenjiConnectOnEventData {
-        let base = BenjiConnectMetadata(context: buildContext(), extras: rawData)
+        let base = BenjiConnectMetadata(context: Builder.buildContext(), extras: rawData)
         return .init(type: type, metadata: base)
     }
 

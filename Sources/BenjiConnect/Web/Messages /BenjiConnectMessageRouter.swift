@@ -9,7 +9,8 @@ import Foundation
 import WebKit
 
 @MainActor
-public final class BenjiConnectMessageRouter: NSObject {
+public final class BenjiConnectMessageRouter: NSObject, WKScriptMessageHandler {
+
     public static let handlerName = "benjiConnect"
 
     private let config: BenjiConnectConfig
@@ -23,31 +24,16 @@ public final class BenjiConnectMessageRouter: NSObject {
         super.init()
     }
 
-    public func attach(to webView: WKWebView) {
-        webView.configuration.userContentController.add(self, name: Self.handlerName)
-    }
-
-    public func detach(from webView: WKWebView) {
-        webView.configuration.userContentController.removeScriptMessageHandler(forName: Self.handlerName)
-    }
-}
-
-extension BenjiConnectMessageRouter: WKScriptMessageHandler {
-
+    // WKScriptMessageHandler entry point
     public func userContentController(_ userContentController: WKUserContentController,
                                       didReceive message: WKScriptMessage) {
+        handle(message: message)
+    }
 
-        // Best-effort origin check
-        // WKScriptMessage doesn't expose origin directly; we can check frame URL.
-        if let frameURL = message.frameInfo.request.url,
-           let origin = frameURL.originString,
-           !expectedOrigin.isEmpty,
-           origin != expectedOrigin {
-            // Ignore messages from unexpected origins
-            return
-        }
+    private func handle(message: WKScriptMessage) {
+        // Optional origin check (careful with popups/subframes)
+        // if let url = message.frameInfo.request.url, url.originString != expectedOrigin { return }
 
-        // Body should be a JSON object: { type: "...", data: {...} }
         guard let bodyJSON = message.body as? [String: Any],
               let data = try? JSONSerialization.data(withJSONObject: bodyJSON, options: []) else {
             return
@@ -95,4 +81,3 @@ extension BenjiConnectMessageRouter: WKScriptMessageHandler {
         }
     }
 }
-

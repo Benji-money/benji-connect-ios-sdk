@@ -8,15 +8,6 @@
 import Foundation
 
 enum BenjiConnectConstants {
-    static let namespace: String = "benji-connect-ios"
-
-    static let version: String = {
-        // Works in apps and SwiftPM libs without resources
-        let bundle = Bundle(for: BenjiConnectSDK.self)
-        if let v = bundle.infoDictionary?["CFBundleShortVersionString"] as? String {
-            return v
-        }
-        return "0.0.0"
-    }()
+    static let namespace = "benji-connect-ios-sdk"
+    static let version = "0.1.0-beta.1" // Static for now, eventually will be updated as part of sdk release flow
 }
-

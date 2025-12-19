@@ -17,9 +17,9 @@ final class BenjiConnectViewController: UIViewController {
     private let config: BenjiConnectConfig
     private let onClose: () -> Void
 
+    private var router: BenjiConnectMessageRouter?
     private var webView: WKWebView!
     private var webViewFactory: BenjiWebViewFactory?
-    private var router: BenjiConnectMessageRouter?
 
     // UI container for “modal card”
     private let contentView = UIView()
@@ -36,7 +36,7 @@ final class BenjiConnectViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        setupWebViewAndRouter()
+        setupWebView()
         loadConnect()
     }
 
@@ -75,8 +75,12 @@ final class BenjiConnectViewController: UIViewController {
         NSLayoutConstraint.activate([
             contentView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             contentView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            contentView.widthAnchor.constraint(equalToConstant: 400),
-            contentView.heightAnchor.constraint(equalToConstant: 645)
+
+            contentView.widthAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.widthAnchor, constant: -32),
+            contentView.heightAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.heightAnchor, constant: -32),
+
+            contentView.widthAnchor.constraint(equalToConstant: 400).withPriority(.defaultHigh),
+            contentView.heightAnchor.constraint(equalToConstant: 645).withPriority(.defaultHigh),
         ])
     }
 
@@ -108,10 +112,9 @@ final class BenjiConnectViewController: UIViewController {
         print("HIT VIEW:", hit ?? "nil")
     }
 
-    // MARK: - WebView + Router
-
-    private func setupWebViewAndRouter() {
-        
+    // MARK: - Bridge + Router + WebView
+    
+    private func setupRouter() {
         let expectedOrigin = Endpoints.expectedOrigin(for: config.environment)
         
         let router = BenjiConnectMessageRouter(config: config, expectedOrigin: expectedOrigin) { [weak self] in
@@ -120,8 +123,16 @@ final class BenjiConnectViewController: UIViewController {
             self.onClose()
         }
         self.router = router
+    }
 
-        let factory = BenjiWebViewFactory(router: router, consoleForwarder: consoleForwarder)
+    private func setupWebView() {
+        
+        setupRouter()
+
+        let factory = BenjiWebViewFactory(
+            router: self.router!,
+            consoleForwarder: consoleForwarder
+        )
         self.webView = factory.makeWebView()
         self.webView.navigationDelegate = self
         self.webView.uiDelegate = self
@@ -141,8 +152,8 @@ final class BenjiConnectViewController: UIViewController {
         webView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         contentView.layoutIfNeeded()
 
-        webView.evaluateJavaScript("Boolean(window.webkit?.messageHandlers?.benjiConnect)") { result, error in
-            print("benjiConnect handler exists:", result ?? "nil", "error:", error as Any)
+        webView.evaluateJavaScript("Boolean(window.webkit?.messageHandlers?.benjiConnectRouter)") { result, error in
+            print("benjiConnect router handler exists:", result ?? "nil", "error:", error as Any)
         }
         print("webView isUserInteractionEnabled:", webView.isUserInteractionEnabled)
         print("contentView subviews:", contentView.subviews)
@@ -226,7 +237,11 @@ extension BenjiConnectViewController: WKUIDelegate {
         guard navigationAction.targetFrame == nil else { return nil }
         guard let factory = self.webViewFactory else { return nil }
 
-        let popupVC = BenjiPopupWebViewController(factory: factory, configuration: configuration)
+        let popupVC = BenjiPopupWebViewController(
+            configuration: configuration,
+            factory: factory
+        )
+        popupVC.loadViewIfNeeded()
         present(popupVC, animated: true)
         return popupVC.webView
     }

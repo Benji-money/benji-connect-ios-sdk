@@ -8,16 +8,24 @@
 import Foundation
 import WebKit
 
+/*
+ * Routes messages from Connect JS to iOS Connect SDK Callbacks
+ */
+
 @MainActor
 public final class BenjiConnectMessageRouter: NSObject, WKScriptMessageHandler {
 
-    public static let handlerName = "benjiConnect"
+    public static let handlerName = "benjiConnectRouter"
 
     private let config: BenjiConnectConfig
     private let expectedOrigin: String
     private let close: () -> Void
 
-    public init(config: BenjiConnectConfig, expectedOrigin: String, close: @escaping () -> Void) {
+    public init(
+        config: BenjiConnectConfig,
+        expectedOrigin: String,
+        close: @escaping () -> Void
+    ) {
         self.config = config
         self.expectedOrigin = expectedOrigin
         self.close = close

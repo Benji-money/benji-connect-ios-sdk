@@ -12,11 +12,13 @@ import WebKit
 @MainActor
 final class BenjiPopupWebViewController: UIViewController {
 
-
     let webView: WKWebView
     var onClose: (() -> Void)?
 
-    init(factory: BenjiWebViewFactory, configuration: WKWebViewConfiguration) {
+    init(
+        configuration: WKWebViewConfiguration,
+        factory: BenjiWebViewFactory
+    ) {
         self.webView = factory.makeWebView(using: configuration)
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .pageSheet
@@ -27,7 +29,7 @@ final class BenjiPopupWebViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         webView.navigationDelegate = self
-
+        webView.uiDelegate = self
         view.addSubview(webView)
         webView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -36,6 +38,11 @@ final class BenjiPopupWebViewController: UIViewController {
             webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
         ])
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        webView.endEditing(true)
     }
     
     @objc private func closeTapped() {
@@ -62,6 +69,15 @@ extension BenjiPopupWebViewController: WKNavigationDelegate {
         }
 
         decisionHandler(.allow)
+    }
+}
+
+extension BenjiPopupWebViewController: WKUIDelegate {
+    
+    // Dismiss Popup when navigating away in Connect JS
+    func webViewDidClose(_ webView: WKWebView) {
+        dismiss(animated: true)
+        onClose?()
     }
 }
 

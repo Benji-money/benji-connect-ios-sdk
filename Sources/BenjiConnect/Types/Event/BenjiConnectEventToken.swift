@@ -9,7 +9,7 @@ import Foundation
 
 public struct BenjiConnectEventToken: Codable, Sendable, Equatable {
     public let accessToken: String
-    public let refreshToken: String
+    public let refreshToken: String?
     public let expiresAt: JSONValue?
     
     private enum CodingKeys: String, CodingKey {
@@ -18,7 +18,7 @@ public struct BenjiConnectEventToken: Codable, Sendable, Equatable {
         case expiresAt = "expires_at"
     }
 
-    public init(accessToken: String, refreshToken: String, expiresAt: JSONValue? = nil) {
+    public init(accessToken: String, refreshToken: String? = nil, expiresAt: JSONValue? = nil) {
         self.accessToken = accessToken
         self.refreshToken = refreshToken
         self.expiresAt = expiresAt

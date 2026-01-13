@@ -8,46 +8,40 @@
 import Foundation
 import WebKit
 
+/*
+ * Routes messages from Connect JS to iOS Connect SDK Callbacks
+ */
+
 @MainActor
-public final class BenjiConnectMessageRouter: NSObject {
-    public static let handlerName = "benjiConnect"
+public final class BenjiConnectMessageRouter: NSObject, WKScriptMessageHandler {
+
+    public static let handlerName = "benjiConnectRouter"
 
     private let config: BenjiConnectConfig
     private let expectedOrigin: String
     private let close: () -> Void
 
-    public init(config: BenjiConnectConfig, expectedOrigin: String, close: @escaping () -> Void) {
+    public init(
+        config: BenjiConnectConfig,
+        expectedOrigin: String,
+        close: @escaping () -> Void
+    ) {
         self.config = config
         self.expectedOrigin = expectedOrigin
         self.close = close
         super.init()
     }
 
-    public func attach(to webView: WKWebView) {
-        webView.configuration.userContentController.add(self, name: Self.handlerName)
-    }
-
-    public func detach(from webView: WKWebView) {
-        webView.configuration.userContentController.removeScriptMessageHandler(forName: Self.handlerName)
-    }
-}
-
-extension BenjiConnectMessageRouter: WKScriptMessageHandler {
-
+    // WKScriptMessageHandler entry point
     public func userContentController(_ userContentController: WKUserContentController,
                                       didReceive message: WKScriptMessage) {
+        handle(message: message)
+    }
 
-        // Best-effort origin check
-        // WKScriptMessage doesn't expose origin directly; we can check frame URL.
-        if let frameURL = message.frameInfo.request.url,
-           let origin = frameURL.originString,
-           !expectedOrigin.isEmpty,
-           origin != expectedOrigin {
-            // Ignore messages from unexpected origins
-            return
-        }
+    private func handle(message: WKScriptMessage) {
+        // Optional origin check (careful with popups/subframes)
+        // if let url = message.frameInfo.request.url, url.originString != expectedOrigin { return }
 
-        // Body should be a JSON object: { type: "...", data: {...} }
         guard let bodyJSON = message.body as? [String: Any],
               let data = try? JSONSerialization.data(withJSONObject: bodyJSON, options: []) else {
             return
@@ -95,4 +89,3 @@ extension BenjiConnectMessageRouter: WKScriptMessageHandler {
         }
     }
 }
-

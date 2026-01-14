@@ -45,6 +45,7 @@ const sdk = BenjiConnectSDK(
 
 sdk.open(from: presenter)
 ```
+Demo example [here](https://github.com/Benji-money/benji-connect-examples/tree/main/ios/swift).
 
 ## Configuration
 

@@ -9,7 +9,7 @@ import Foundation
 
 public enum Endpoints {
 
-    private static let devAuthURL = URL(string: "http://localhost:3000")!
+    private static let devAuthURL = URL(string: "https://verifyapp-staging.withbenji.com")!
     private static let sandboxAuthURL = URL(string: "https://verifyapp-staging.withbenji.com")!
     private static let prodAuthURL = URL(string: "https://verifyapp.withbenji.com")!
 

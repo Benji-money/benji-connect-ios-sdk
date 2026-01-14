@@ -21,7 +21,7 @@ public final class BenjiWebViewFactory {
         self.consoleForwarder = consoleForwarder
     }
 
-    // Main webview: we create our own configuration
+    // Main webview: create our own configuration
     public func makeWebView() -> WKWebView {
         let config = WKWebViewConfiguration()
         config.preferences.javaScriptCanOpenWindowsAutomatically = true

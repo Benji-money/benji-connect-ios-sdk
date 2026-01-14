@@ -67,18 +67,6 @@ final class BenjiConnectViewController: UIViewController {
         view.addSubview(contentView)
         contentView.translatesAutoresizingMaskIntoConstraints = false
         
-        /*
-        NSLayoutConstraint.activate([
-            contentView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            contentView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-
-            contentView.widthAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.widthAnchor, constant: -32),
-            contentView.heightAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.heightAnchor, constant: -32),
-
-            contentView.widthAnchor.constraint(equalToConstant: 400).withPriority(.defaultHigh),
-            contentView.heightAnchor.constraint(equalToConstant: 645).withPriority(.defaultHigh),
-        ])*/
-        
         let safe = view.safeAreaLayoutGuide
 
         // Keep it centered *when possible* (lower priority)
@@ -106,6 +94,9 @@ final class BenjiConnectViewController: UIViewController {
             contentView.heightAnchor.constraint(lessThanOrEqualToConstant: 645),
             contentView.heightAnchor.constraint(equalTo: safe.heightAnchor, constant: -32).withPriority(.defaultHigh),
         ])
+        
+//        contentView.widthAnchor.constraint(greaterThanOrEqualToConstant: 280).isActive = true
+//        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 200).isActive = true
     }
 
     @objc private func backgroundTapped(_ sender: UITapGestureRecognizer) {
@@ -122,9 +113,6 @@ final class BenjiConnectViewController: UIViewController {
                 
                 // Resign first responder
                 webView.endEditing(true)
-                
-                // Settle layout first, avoid constraint issues
-//                self.view.layoutIfNeeded()
                 
                 self.dismiss(animated: true) { [config] in
                     let base = BenjiConnectMetadata(
@@ -147,7 +135,6 @@ final class BenjiConnectViewController: UIViewController {
     
     private func setupRouter() {
         let expectedOrigin = Endpoints.expectedOrigin(for: config.environment)
-        
         let router = BenjiConnectMessageRouter(config: config, expectedOrigin: expectedOrigin) { [weak self] in
             guard let self else { return }
             self.dismiss(animated: true)
@@ -208,6 +195,18 @@ extension BenjiConnectViewController: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         webView.endEditing(true)
     }
+    
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        print("didFail navigation:", error)
+    }
+    
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        print("didFailProvisionalNavigation:", error)
+    }
+    
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        print("web content process terminated")
+    }
 }
 
 extension BenjiConnectViewController: WKUIDelegate {
@@ -231,8 +230,6 @@ extension BenjiConnectViewController: WKUIDelegate {
         return popupVC.webView
     }
 }
-
-
 
 final class ConsoleForwarder: NSObject, WKScriptMessageHandler {
   func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {

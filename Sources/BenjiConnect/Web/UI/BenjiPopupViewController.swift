@@ -22,22 +22,10 @@ final class BenjiPopupWebViewController: UIViewController {
         self.webView = factory.makeWebView(using: configuration)
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .overFullScreen
-//        #if targetEnvironment(simulator)
-//        // Simulator-friendly: avoid page sheet to reduce keyboard/sheet transition noise
-//        modalPresentationStyle = .overFullScreen
-//        #else
-//        modalPresentationStyle = .pageSheet
-//        #endif
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-    
-//    override func viewDidAppear(_ animated: Bool) {
-//        super.viewDidAppear(animated)
-//        // Ensure the container has its final size before any focus/keyboard operations
-//        view.layoutIfNeeded()
-//    }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -85,13 +73,6 @@ extension BenjiPopupWebViewController: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-
-        if let url = navigationAction.request.url, url.isOAuthURL {
-            decisionHandler(.cancel)
-            //startOAuthInSystemBrowser(url: url)
-            return
-        }
-
         decisionHandler(.allow)
     }
 }
